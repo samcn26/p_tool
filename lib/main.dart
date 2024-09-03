@@ -16,7 +16,8 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  int _selectedIndex = 1;
+  int _selectedIndex = 0;
+  bool _isSidebarVisible = true;
   static final List<String> _menuPath = [ImageTool.path, Tool1.path];
   late List<Widget?> _pages;
 
@@ -69,7 +70,7 @@ class _MyAppState extends State<MyApp> {
                   MenuItem(name: "Image Tool", route: "/image-tool"),
                   MenuItem(name: "Tool1", route: "/tool1"),
                 ],
-                visible: true),
+                visible: _isSidebarVisible),
             const VerticalDivider(thickness: 1, width: 1),
             Expanded(
               child: Padding(
@@ -83,6 +84,15 @@ class _MyAppState extends State<MyApp> {
             ),
           ],
         ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            setState(() {
+              _isSidebarVisible = !_isSidebarVisible;
+            });
+          },
+          child: Icon(_isSidebarVisible ? Icons.fullscreen : Icons.fullscreen_exit),
+        ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       ),
     );
   }
