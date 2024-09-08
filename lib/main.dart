@@ -90,7 +90,7 @@ class _MyAppState extends State<MyApp> {
               _isSidebarVisible = !_isSidebarVisible;
             });
           },
-          child: Icon(_isSidebarVisible ? Icons.fullscreen : Icons.fullscreen_exit),
+          child: Icon(_isSidebarVisible ? Icons.menu_open : Icons.menu),
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       ),

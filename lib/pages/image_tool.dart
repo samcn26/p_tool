@@ -1,5 +1,25 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:p_tool/models/format.dart';
+import 'package:p_tool/widgets/image_formater_item.dart';
+
+final formatOptions = [
+  buildOption(Format.webp),
+  buildOption(Format.jpg),
+  buildOption(Format.png),
+  buildOption(Format.all),
+];
+
+const formatOptionMap = {
+  Format.webp: "WEBP",
+  Format.jpg: "JPG",
+  Format.png: "PNG",
+  Format.all: "SELECT ALL"
+};
+
+FormatOption buildOption(Format format) {
+  return FormatOption(format, formatOptionMap[format]!);
+}
 
 class ImageTool extends StatefulWidget {
   static String path = "/image-tool";
@@ -10,12 +30,18 @@ class ImageTool extends StatefulWidget {
   State<ImageTool> createState() => _ImageToolState();
 }
 
+const maxSelectCount = 10;
+
 class _ImageToolState extends State<ImageTool> {
   bool _hovering = false; // 控制 hover 效果
-  bool _switchValue = false; // 控制 Switch 状态
-  List<String> _selectedFormats = []; // 存储选中的格式
-
+  Map<Format, bool> formatMap = {
+    Format.webp: false,
+    Format.jpg: false,
+    Format.png: false,
+    Format.all: false
+  };
   List<String> _selectedFiles = [];
+  final List<Format> commonItems = [Format.jpg, Format.webp, Format.png];
 
   Future<void> _pickFiles() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -28,11 +54,17 @@ class _ImageToolState extends State<ImageTool> {
       setState(() {
         _selectedFiles = result.paths.map((path) => path!).toList();
       });
+      print(_selectedFiles);
     }
   }
 
+  VoidCallback handleAllOption = () {};
+
   @override
   Widget build(BuildContext context) {
+    // var formatCommand = Map.fromEntries(
+    //     formatMap.entries.where((entry) => entry.key != Format.all)
+    // );
     return Scaffold(
       appBar: AppBar(title: const Text("Image Tool")),
       body: Column(
@@ -84,66 +116,58 @@ class _ImageToolState extends State<ImageTool> {
           ),
           const SizedBox(height: 20),
           // Switch 控件和选项
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Switch(
-                value: _switchValue,
-                onChanged: (value) {
-                  setState(() {
-                    _switchValue = value;
-                    if (!_switchValue) {
-                      _selectedFormats.clear(); // 关闭时清除选中
-                    }
-                  });
-                },
-              ),
-              const Text('Enable Format Selection'),
-            ],
-          ),
-          // 格式选择选项
-          if (_switchValue)
-            const SizedBox(height: 20),
-            Wrap(
-                spacing: 10,
-                children: ['WEBP', 'JPG', 'PNG', 'SELECT ALL'].map((format) {
-                  return FilterChip(
-                    label: Text(format),
-                    selected: format == 'SELECT ALL'
-                        ? _selectedFormats.contains('WEBP') &&
-                            _selectedFormats.contains('JPG') &&
-                            _selectedFormats
-                                .contains('PNG') // 当所有格式都被选中时，SELECT ALL 自动选中
-                        : _selectedFormats.contains(format),
-                    onSelected: (selected) {
-                      setState(() {
-                        if (format == 'SELECT ALL') {
-                          if (selected) {
-                            _selectedFormats = ['WEBP', 'JPG', 'PNG']; // 选中所有格式
-                          } else {
-                            _selectedFormats.clear(); // 取消所有格式
-                          }
-                        } else {
-                          if (selected) {
-                            _selectedFormats.add(format);
-                          } else {
-                            _selectedFormats.remove(format);
-                          }
-                        }
-                      });
-                    },
-                  );
-                }).toList()),
+          Wrap(
+              spacing: 20,
+              children: formatOptions
+                  .map((opt) =>
+                  Row(
+                    // 不占一行
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Checkbox(
+                          key: ValueKey(opt.label),
+                          value: formatMap[opt.value] ?? false,
+                          onChanged: (v) {
+                            setState(() {
+                              formatMap[opt.value] = v!;
+
+                              if (opt.value == Format.all) {
+                                for (var e in commonItems) {
+                                  formatMap[e] = v;
+                                }
+                              } else {
+                                if (!v) {
+                                  formatMap[Format.all] = false;
+                                } else {
+                                  bool allSelected = commonItems
+                                      .every((e) => formatMap[e] == true);
+                                  formatMap[Format.all] = allSelected;
+                                }
+                              }
+                            });
+                          }),
+                      Text(opt.label)
+                    ],
+                  ))
+                  .toList()),
+          SizedBox(height: 20),
           Expanded(
-            child: ListView.builder(
-              itemCount: _selectedFiles.length,
-              itemBuilder: (context, index) {
-                return ListTile(
-                  title: Text(_selectedFiles[index]),
-                );
-              },
-            ),
-          ),
+            child: GridView.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 4, // 4 items per row
+                  crossAxisSpacing: 20, // Horizontal space between items
+                  mainAxisSpacing: 20, // Vertical space between rows
+                  // childAspectRatio: 0.8, // Aspect ratio for each item
+                ),
+                itemCount: _selectedFiles.length,
+                itemBuilder: (context, index) {
+                  return ImageFormaterItem(path: _selectedFiles[index], formatCommand: formatMap);
+                }),
+          )
+          //
+          // SizedBox(width: 200,
+          //     child: ImageFormaterItem(
+          //         path: "/test.png", formatCommand: formatMap))
         ],
       ),
     );
