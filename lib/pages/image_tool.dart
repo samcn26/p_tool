@@ -1,6 +1,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:p_tool/models/format.dart';
+import 'package:p_tool/utils/screen_util.dart';
 import 'package:p_tool/widgets/image_formater_item.dart';
 
 final formatOptions = [
@@ -34,14 +35,14 @@ const maxSelectCount = 10;
 
 class _ImageToolState extends State<ImageTool> {
   bool _hovering = false; // 控制 hover 效果
-  Map<Format, bool> formatMap = {
+  final Map<Format, bool> _formatMap = {
     Format.webp: false,
     Format.jpg: false,
     Format.png: false,
     Format.all: false
   };
   List<String> _selectedFiles = [];
-  final List<Format> commonItems = [Format.jpg, Format.webp, Format.png];
+  final List<Format> _commonItems = [Format.jpg, Format.webp, Format.png];
 
   Future<void> _pickFiles() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -54,7 +55,6 @@ class _ImageToolState extends State<ImageTool> {
       setState(() {
         _selectedFiles = result.paths.map((path) => path!).toList();
       });
-      print(_selectedFiles);
     }
   }
 
@@ -65,6 +65,8 @@ class _ImageToolState extends State<ImageTool> {
     // var formatCommand = Map.fromEntries(
     //     formatMap.entries.where((entry) => entry.key != Format.all)
     // );
+
+    print(_selectedFiles);
     return Scaffold(
       appBar: AppBar(title: const Text("Image Tool")),
       body: Column(
@@ -126,22 +128,22 @@ class _ImageToolState extends State<ImageTool> {
                     children: [
                       Checkbox(
                           key: ValueKey(opt.label),
-                          value: formatMap[opt.value] ?? false,
+                          value: _formatMap[opt.value] ?? false,
                           onChanged: (v) {
                             setState(() {
-                              formatMap[opt.value] = v!;
+                              _formatMap[opt.value] = v!;
 
                               if (opt.value == Format.all) {
-                                for (var e in commonItems) {
-                                  formatMap[e] = v;
+                                for (var e in _commonItems) {
+                                  _formatMap[e] = v;
                                 }
                               } else {
                                 if (!v) {
-                                  formatMap[Format.all] = false;
+                                  _formatMap[Format.all] = false;
                                 } else {
-                                  bool allSelected = commonItems
-                                      .every((e) => formatMap[e] == true);
-                                  formatMap[Format.all] = allSelected;
+                                  bool allSelected = _commonItems
+                                      .every((e) => _formatMap[e] == true);
+                                  _formatMap[Format.all] = allSelected;
                                 }
                               }
                             });
@@ -150,18 +152,18 @@ class _ImageToolState extends State<ImageTool> {
                     ],
                   ))
                   .toList()),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           Expanded(
             child: GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 4, // 4 items per row
+                gridDelegate:  SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: ScreenUtil.isSmallScreen(context) ? 1 :  4, // 4 items per row
                   crossAxisSpacing: 20, // Horizontal space between items
                   mainAxisSpacing: 20, // Vertical space between rows
                   // childAspectRatio: 0.8, // Aspect ratio for each item
                 ),
                 itemCount: _selectedFiles.length,
                 itemBuilder: (context, index) {
-                  return ImageFormaterItem(path: _selectedFiles[index], formatCommand: formatMap);
+                  return ImageFormaterItem(key: ValueKey(_selectedFiles[index]), path: _selectedFiles[index], formatCommand: _formatMap);
                 }),
           )
           //

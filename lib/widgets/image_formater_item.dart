@@ -1,5 +1,5 @@
 import 'dart:io';
-
+import 'package:path/path.dart' as p;
 import 'package:flutter/material.dart';
 import 'package:p_tool/models/format.dart';
 import 'package:p_tool/pages/image_tool.dart';
@@ -18,14 +18,42 @@ class ImageFormaterItem extends StatefulWidget {
 
 class _ImageFormaterItemState extends State<ImageFormaterItem> {
   final Map<Format, bool> _cachedFormatStatus = {
-    Format.webp: true,
-    Format.jpg: true,
-    Format.png: true,
+    Format.webp: false,
+    Format.jpg: false,
+    Format.png: false,
   };
 
-  final _fileName = "test";
+  final Map<Format, String> _compressedFormatSize = {
+    Format.webp: "",
+    Format.jpg: "",
+    Format.png: "",
+  };
 
-  // format content
+  late String _fileName = "";
+  late String _originSize = "";
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.path.isNotEmpty) {
+      setState(() {
+        _fileName = p.basenameWithoutExtension(widget.path);
+      });
+
+      String extention = p.extension(widget.path).substring(1);
+
+      // 压缩
+      print("$extention compress is done");
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant ImageFormaterItem oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // 当文件路径发生变化时，处理文件名
+
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -57,28 +85,37 @@ class _ImageFormaterItemState extends State<ImageFormaterItem> {
         //     ),
         //   ),
         // ),
-        SizedBox(height: 10,),
+        const SizedBox(
+          height: 10,
+        ),
         Text(
           _fileName,
           maxLines: 1, // 限制显示为一行
           overflow: TextOverflow.ellipsis, // 超出部分显示省略号
         ),
-        SizedBox(height: 10,),
+        const SizedBox(
+          height: 10,
+        ),
         Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: _cachedFormatStatus.entries
                 .where((x) => x.value)
-                .map((e) => Padding(
-                      padding: const EdgeInsets.only(right: 20),
-                      child: ActionChip(
-                        label: Column(children: [
-                          Text(formatOptionMap[e.key]!),
-                          Text("123.234K", style: TextStyle(fontSize: 10,color: Colors.black54),)
-                        ],),
-                        onPressed: () {
-                          print('download $_fileName, ${e.key}');
-                        },
-                      ),
-                    ))
+                .map(
+                  (e) => ActionChip(
+                    label: Column(
+                      children: [
+                        Text(formatOptionMap[e.key]!),
+                        const Text(
+                          "123.234K",
+                          style: TextStyle(fontSize: 10, color: Colors.black54),
+                        )
+                      ],
+                    ),
+                    onPressed: () {
+                      print('download $_fileName, ${e.key}');
+                    },
+                  ),
+                )
                 .toList())
       ],
     );
